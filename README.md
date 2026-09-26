@@ -12,7 +12,41 @@ cp .env.example .env && docker compose up -d
 
 后端健康检查：<http://localhost:21114/health>
 
-后端健康检查：<http://localhost:21114/health>
+### 批次谱系 API
+
+拆分登记（子批合计必须等于父批数量，否则 422 拒绝）：
+
+```bash
+curl -X POST http://localhost:21114/api/genealogy/split \
+  -H 'Content-Type: application/json' \
+  -d '{"docNo":"DOC-SPLIT-001","parentBatchNo":"B-2026-0002","children":[{"batchNo":"B-2026-0002-A","quantity":300},{"batchNo":"B-2026-0002-B","quantity":200}]}'
+```
+
+合并登记（合并量必须等于各来源之和，来源数量须与批次登记数量一致）：
+
+```bash
+curl -X POST http://localhost:21114/api/genealogy/merge \
+  -H 'Content-Type: application/json' \
+  -d '{"docNo":"DOC-MERGE-001","targetBatchNo":"B-2026-0009","mergeQuantity":1100,"sources":[{"batchNo":"B-2026-0003","quantity":800},{"batchNo":"B-2026-0004","quantity":300}]}'
+```
+
+谱系追溯（返回上游工单、原料批和下游批次）：
+
+```bash
+curl http://localhost:21114/api/genealogy/trace/B-2026-0009
+curl http://localhost:21114/api/trace/B-2026-0009   # 等效别名
+```
+
+谱系事件与链路清单：`GET /api/genealogy/events`、`GET /api/genealogy/links`。
+
+业务规则：
+
+- 拆分/合并时登记来源、去向和数量（`batch_genealogy_link`），并生成业务单事件（`batch_genealogy_event`）。
+- 数量不符（子批合计 ≠ 父批、合并量 ≠ 各来源之和、来源申报量 ≠ 批次登记量）一律 422 拒绝。
+- 来源绕回原批（直接或间接回环，含来源即目标本身）一律 422 拒绝。
+- 已拆分（SPLIT）或已合并（MERGED）的批次不得再次作为来源或目标。
+- 同一 `docNo` 业务单再次到达时，直接返回最初登记结果（HTTP 200，内容与首次一致），不重复入账。
+- 原有清单接口（`GET /api/product-batch`、`GET /api/work-order` 等）照常可查。
 
 
 ## 本地开发方式
@@ -34,7 +68,7 @@ cp .env.example .env && docker compose up -d
 
 ```text
 
-backend/src/routes, controllers, services, models, repositories, middlewares, constants, constructors, utils, types, config
+backend/src/routes, controllers, services, models, repositories, middlewares, constants, constructors, validators, exceptions, utils, types, config
 ```
 
 ## 环境变量说明
@@ -57,6 +91,8 @@ backend/src/routes, controllers, services, models, repositories, middlewares, co
 - WorkOrderStatus: constants/WorkOrderStatus、types/WorkOrderStatus、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
 - InspectionResultStatus: constants/InspectionResultStatus、types/InspectionResultStatus、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
 - DefectSeverity: constants/DefectSeverity、types/DefectSeverity、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
+- GenealogyEventType（SPLIT/MERGE）: constants/GenealogyEventType 定义，services/BatchGenealogyService 登记事件时写入，models/BatchGenealogyEvent.eventType 承载其取值，logTemplates 中拆分/合并日志分别对应两个取值。
+- BatchStatus（READY/SPLIT/MERGED）: constants/BatchStatus、repositories/ProductBatchRepository、services/BatchGenealogyService 均有引用。
 
 ## 为什么会牵一发动全身
 

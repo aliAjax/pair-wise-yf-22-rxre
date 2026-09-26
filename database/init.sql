@@ -58,3 +58,21 @@ CREATE TABLE IF NOT EXISTS audit_log (
   target_id TEXT,
   created_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS batch_genealogy_event (
+  id INTEGER PRIMARY KEY,
+  doc_no TEXT,
+  event_type TEXT,
+  anchor_batch_no TEXT,
+  total_quantity TEXT,
+  created_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS batch_genealogy_link (
+  id INTEGER PRIMARY KEY,
+  doc_no TEXT,
+  source_batch_no TEXT,
+  target_batch_no TEXT,
+  quantity TEXT,
+  created_at TEXT
+);
