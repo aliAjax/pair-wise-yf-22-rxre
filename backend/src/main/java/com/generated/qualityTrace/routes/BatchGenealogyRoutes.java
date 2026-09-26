@@ -1,0 +1,1 @@
+package com.generated.qualityTrace.routes; public final class BatchGenealogyRoutes { public static final String PATH="/api/batch-genealogy"; public static final String SPLIT="/split"; public static final String MERGE="/merge"; public static final String TRACE="/trace/{batchNo}"; }

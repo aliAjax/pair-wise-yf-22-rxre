@@ -58,3 +58,23 @@ CREATE TABLE IF NOT EXISTS audit_log (
   target_id TEXT,
   created_at TEXT
 );
+
+-- 批次谱系：拆分/合并业务单（biz_no 为幂等键，同一业务单重复到达返回首次登记结果）
+CREATE TABLE IF NOT EXISTS batch_transform (
+  id INTEGER PRIMARY KEY,
+  biz_no TEXT,
+  action TEXT,
+  anchor_batch_no TEXT,
+  total_quantity TEXT,
+  created_at TEXT
+);
+
+-- 批次谱系边：来源批 -> 去向批，附数量
+CREATE TABLE IF NOT EXISTS batch_transform_line (
+  id INTEGER PRIMARY KEY,
+  biz_no TEXT,
+  action TEXT,
+  source_batch_no TEXT,
+  target_batch_no TEXT,
+  quantity TEXT
+);

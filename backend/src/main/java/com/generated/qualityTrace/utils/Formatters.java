@@ -1,1 +1,1 @@
-package com.generated.qualityTrace.utils; public final class Formatters { public static String audit(String type, long id){ return type + "#" + id; } }
+package com.generated.qualityTrace.utils; public final class Formatters { public static String audit(String type, long id){ return type + "#" + id; } public static String nowIso(){ return java.time.Instant.now().toString(); } }
